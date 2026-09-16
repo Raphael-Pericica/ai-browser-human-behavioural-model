@@ -13,6 +13,7 @@
     </header>
 
   
+  
     <section id="consent-screen" class="screen">
       <p class="lead">
         This extension can show you patterns in how you search, using data that
@@ -42,9 +43,7 @@
       </p>
     </section>
 
-    <!--
-      SCREEN 2: the 
-    -->
+
     <section id="control-screen" class="screen is-hidden">
       <div class="stat-row">
         <div class="stat">
@@ -52,13 +51,13 @@
           <span class="stat-label">today</span>
         </div>
         <div class="stat">
-          <span class="stat-value" id="stat-week">&mdash;</span>
-          <span class="stat-label">this week</span>
+          <span class="stat-value" id="stat-total">&mdash;</span>
+          <span class="stat-label">all time</span>
         </div>
       </div>
 
       <p class="fine-print">
-        Numbers stay empty until we start collecting searches in a later phase.
+        Read straight from local storage on this computer.
       </p>
 
       <button id="pause-button" class="button button--secondary" type="button">
@@ -75,7 +74,7 @@
         Delete all my data
       </button>
 
-      <!-- The confirmattion of delte -->
+  
       <div id="delete-confirm" class="confirm-strip is-hidden">
         <p class="confirm-question">Delete everything? This cannot be undone.</p>
         <div class="confirm-actions">

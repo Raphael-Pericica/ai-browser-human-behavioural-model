@@ -1,10 +1,47 @@
+//match with background
+const STORAGE_KEY_SEARCHES = "searches";
 
 
 let trackingIsEnabled = false;
 let trackingIsPaused = false;
 
+//compare both we set 0000 then compare with milliseconds
+function countSearchesToday(searches) {
+  const midnightThisMorning = new Date();
+  midnightThisMorning.setHours(0, 0, 0, 0);
+
+  const midnightAsNumber = midnightThisMorning.getTime();
+
+  let howManyToday = 0;
+
+  for (let i = 0; i < searches.length; i++) {
+    if (searches[i].timestamp >= midnightAsNumber) {
+      howManyToday = howManyToday + 1;
+    }
+  }
+
+  return howManyToday;
+}
 
 
+//reads the searches out of storage and puts the numbers on screen
+function refreshStoredCounts() {
+  chrome.storage.local.get([STORAGE_KEY_SEARCHES], function (stored) {
+    let searches = stored[STORAGE_KEY_SEARCHES];
+
+    //nothing saved yet means undefined
+    if (searches === undefined) {
+      searches = [];
+    }
+
+    document.getElementById("stat-today").textContent = countSearchesToday(searches);
+    document.getElementById("stat-total").textContent = searches.length;
+  });
+}
+
+
+
+//displaying the right screen
 
 function refreshScreen() {
   const consentScreen = document.getElementById("consent-screen");
@@ -24,11 +61,9 @@ function refreshScreen() {
 }
 
 
-// updates the small coloured label in the top right corner
 function refreshStatusPill() {
   const statusPill = document.getElementById("status-pill");
 
-  // clear any colour class left over from last time, then apply the right one
   statusPill.classList.remove("status-pill--off", "status-pill--on", "status-pill--paused");
 
   if (trackingIsEnabled === false) {
@@ -44,7 +79,6 @@ function refreshStatusPill() {
 }
 
 
-// pause button label change
 function refreshPauseButton() {
   const pauseButton = document.getElementById("pause-button");
 
@@ -56,12 +90,12 @@ function refreshPauseButton() {
 }
 
 
-
-
+//buttons 
 function handleEnableClick() {
   trackingIsEnabled = true;
   trackingIsPaused = false;
   refreshScreen();
+  refreshStoredCounts();
 }
 
 
@@ -73,7 +107,6 @@ function handleDisableClick() {
 
 
 function handlePauseClick() {
-  
   trackingIsPaused = !trackingIsPaused;
   refreshScreen();
 }
@@ -89,14 +122,18 @@ function hideDeleteConfirmation() {
 }
 
 
+//removes stored data
 function handleDeleteConfirmed() {
+  chrome.storage.local.remove([STORAGE_KEY_SEARCHES], function () {
+    console.log("[Search Habits AI] All stored searches deleted.");
 
-  console.log("Delete confirmed. No stored data exists yet in Phase 1.");
-  hideDeleteConfirmation();
+    hideDeleteConfirmation();
+    refreshStoredCounts();
+  });
 }
 
 
-
+//event listener
 function connectButtons() {
   document.getElementById("enable-button").addEventListener("click", handleEnableClick);
   document.getElementById("disable-button").addEventListener("click", handleDisableClick);
@@ -108,15 +145,15 @@ function connectButtons() {
 }
 
 
-
+//start up
 
 function showExtensionVersion() {
   const manifest = chrome.runtime.getManifest();
   document.getElementById("version-number").textContent = manifest.version;
 }
 
-
-
+//runs on start up
 showExtensionVersion();
 connectButtons();
 refreshScreen();
+refreshStoredCounts();
