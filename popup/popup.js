@@ -1,11 +1,47 @@
-//match with background
+
+//both names must match the ones in background
 const STORAGE_KEY_SEARCHES = "searches";
+const STORAGE_KEY_SETTINGS = "settings";
 
 
 let trackingIsEnabled = false;
 let trackingIsPaused = false;
 
-//compare both we set 0000 then compare with milliseconds
+
+//loads the settings and saves them then execute them
+function loadSettings(whenLoaded) {
+  chrome.storage.local.get([STORAGE_KEY_SETTINGS], function (stored) {
+    const settings = stored[STORAGE_KEY_SETTINGS];
+
+    if (settings === undefined) {
+      // Brand new install. Stay off.
+      trackingIsEnabled = false;
+      trackingIsPaused = false;
+    } else {
+      trackingIsEnabled = settings.trackingEnabled === true;
+      trackingIsPaused = settings.trackingPaused === true;
+    }
+
+    whenLoaded();
+  });
+}
+
+
+//writes the two variables back into storage
+function saveSettings() {
+  const settings = {
+    trackingEnabled: trackingIsEnabled,
+    trackingPaused: trackingIsPaused
+  };
+
+  const thingsToSave = {};
+  thingsToSave[STORAGE_KEY_SETTINGS] = settings;
+
+  chrome.storage.local.set(thingsToSave);
+}
+
+
+//reads count and turns to milliseconds
 function countSearchesToday(searches) {
   const midnightThisMorning = new Date();
   midnightThisMorning.setHours(0, 0, 0, 0);
@@ -24,12 +60,10 @@ function countSearchesToday(searches) {
 }
 
 
-//reads the searches out of storage and puts the numbers on screen
 function refreshStoredCounts() {
   chrome.storage.local.get([STORAGE_KEY_SEARCHES], function (stored) {
     let searches = stored[STORAGE_KEY_SEARCHES];
 
-    //nothing saved yet means undefined
     if (searches === undefined) {
       searches = [];
     }
@@ -40,8 +74,7 @@ function refreshStoredCounts() {
 }
 
 
-
-//displaying the right screen
+//display the correct screen
 
 function refreshScreen() {
   const consentScreen = document.getElementById("consent-screen");
@@ -90,10 +123,13 @@ function refreshPauseButton() {
 }
 
 
-//buttons 
+//buttons
+
 function handleEnableClick() {
   trackingIsEnabled = true;
   trackingIsPaused = false;
+
+  saveSettings();
   refreshScreen();
   refreshStoredCounts();
 }
@@ -102,12 +138,17 @@ function handleEnableClick() {
 function handleDisableClick() {
   trackingIsEnabled = false;
   trackingIsPaused = false;
+
+  saveSettings();
   refreshScreen();
 }
 
 
 function handlePauseClick() {
+
   trackingIsPaused = !trackingIsPaused;
+
+  saveSettings();
   refreshScreen();
 }
 
@@ -122,7 +163,7 @@ function hideDeleteConfirmation() {
 }
 
 
-//removes stored data
+//deletes data
 function handleDeleteConfirmed() {
   chrome.storage.local.remove([STORAGE_KEY_SEARCHES], function () {
     console.log("[Search Habits AI] All stored searches deleted.");
@@ -133,7 +174,6 @@ function handleDeleteConfirmed() {
 }
 
 
-//event listener
 function connectButtons() {
   document.getElementById("enable-button").addEventListener("click", handleEnableClick);
   document.getElementById("disable-button").addEventListener("click", handleDisableClick);
@@ -146,14 +186,18 @@ function connectButtons() {
 
 
 //start up
-
 function showExtensionVersion() {
   const manifest = chrome.runtime.getManifest();
   document.getElementById("version-number").textContent = manifest.version;
 }
 
-//runs on start up
+
+//consent screen bug fix
+
 showExtensionVersion();
 connectButtons();
-refreshScreen();
-refreshStoredCounts();
+
+loadSettings(function () {
+  refreshScreen();
+  refreshStoredCounts();
+});

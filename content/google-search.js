@@ -38,7 +38,7 @@ function sendRecordToBackOffice(searchRecord) {
     console.log("[Search Habits AI] Service worker replied:", reply);
   });
 
-  // This line runs BEFORE the reply arrives. Watch the order in the console.
+  
   console.log("[Search Habits AI] Message sent, not waiting for a reply.");
 }
 

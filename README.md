@@ -3,7 +3,7 @@
 A privacy-focused Chrome extension (Manifest V3) that analyses **your own**
 Google search habits locally, on your machine.
 
-Status: **Phase 5 - searches saved to local storage**
+Status: **Phase 6 - privacy controls enforced**
 
 ## The four parts
 
@@ -25,11 +25,25 @@ All four share one filing cabinet: `chrome.storage.local`.
 - The user can **pause** tracking and **delete** all collected data at any time.
 - The user can always see exactly what is stored and what is analysed.
 
-### Known gap at this phase
+### How the opt-in is enforced
 
-The opt-in is **not yet enforced**. Searches are saved whether or not the user
-has pressed "Enable tracking". Phase 6 closes this. The Delete button does work,
-so anything collected in the meantime can be cleared.
+Every search in the extension passes through one listener in `background.js`,
+and that listener is the only place that decides whether a search is kept:
+
+```js
+if (settings.trackingEnabled !== true) { ...refuse... }
+if (settings.trackingPaused === true)  { ...refuse... }
+```
+
+Two deliberate choices:
+
+- The check is `!== true`, not `=== false`. A missing or corrupted value
+  refuses rather than allows. Only an explicit `true` gets through.
+- When no settings exist at all - a brand new install - the default is
+  tracking off. A bug that wiped the settings would fail closed, not open.
+
+Deleting data does not change the settings, and changing the settings does not
+delete data. Two separate decisions, each made by the user.
 
 ## Storage
 
@@ -39,6 +53,7 @@ search queries to Google's servers, which would defeat the entire point.
 | Key | Contents |
 |-----|----------|
 | `searches` | An array of search records, oldest first, capped at 5000 |
+| `settings` | `{ trackingEnabled: boolean, trackingPaused: boolean }` |
 
 A search record:
 
@@ -55,7 +70,7 @@ and compares correctly regardless of locale.
 ## Permissions and access
 
 `"permissions": ["storage"]` - lets the extension write to its own private box.
-Chrome shows the user no warning for this one, because it grants no access to
+Chrome shows the user no warning for this, because it grants no access to
 anybody else's data.
 
 Host access is limited to Google search result pages:
@@ -74,13 +89,13 @@ address bar and never touches page contents.
 ```
 search_habits/
   manifest.json              Configuration Chrome reads first
-  background.js              The back office: receives searches, saves them
+  background.js              The back office: the opt-in gate, and saving
   content/
     google-search.js         The scout, injected into Google search pages
   popup/
     popup.html               The front counter
     popup.css
-    popup.js                 Screens, buttons, reads counts from storage
+    popup.js                 Screens, buttons, settings, counts
   icons/
     icon16.png  icon48.png  icon128.png
   README.md
@@ -96,9 +111,16 @@ search_habits/
 }
 ```
 
-The back office replies `{ received: true, totalStored: n }` once the save has
-finished. Because that reply is asynchronous, its listener ends with
-`return true` to keep the message channel open.
+The back office replies with one of:
+
+```js
+{ received: true, saved: true,  totalStored: 12 }
+{ received: true, saved: false, reason: "not-enabled" }
+{ received: true, saved: false, reason: "paused" }
+```
+
+Because the reply is asynchronous, the listener ends with `return true` to keep
+the message channel open.
 
 ## Where each part logs
 
@@ -110,13 +132,10 @@ finished. Because that reply is asynchronous, its listener ends with
 
 ## Inspecting stored data
 
-`chrome://extensions` -> the "service worker" link -> **Application** tab ->
-**Storage** -> **Extension storage** -> **Local**.
-
-Or run this in the service worker console:
+In the service worker console:
 
 ```js
-chrome.storage.local.get(["searches"], (r) => console.table(r.searches));
+chrome.storage.local.get(["searches", "settings"], (r) => console.log(r));
 ```
 
 ## Running it locally
@@ -137,7 +156,7 @@ After changing a content script, **also reload the Google tab**.
 | 3 | Detect Google searches | done |
 | 4 | Content script to service worker messaging | done |
 | 5 | Local storage of searches | done |
-| 6 | Privacy controls: opt-in, pause, delete | |
+| 6 | Privacy controls: opt-in, pause, delete | done |
 | 7 | Search categorisation | |
 | 8 | Statistics / analysis engine | |
 | 9 | Dashboard | |
@@ -146,3 +165,6 @@ After changing a content script, **also reload the Google tab**.
 | 12 | UI/UX polish | |
 | 13 | Testing, privacy review, docs, packaging | |
 | 14 | Possible Chrome Web Store publication | |
+
+Not yet built: a data retention setting (auto-delete searches older than N
+days). Worth adding before any public release.
