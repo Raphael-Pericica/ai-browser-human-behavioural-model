@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-   
     <link rel="stylesheet" href="popup.css" />
     <title>Search Habits AI</title>
   </head>
@@ -10,23 +9,95 @@
   <body>
     <header class="app-header">
       <h1 class="app-title">Search Habits AI</h1>
-      <p class="app-subtitle">Phase 0 &mdash; setup check</p>
+      <span id="status-pill" class="status-pill status-pill--off">Not enabled</span>
     </header>
 
-    <main class="app-main">
-      <p class="status-message">
-        The extension loaded correctly.
+  
+    <section id="consent-screen" class="screen">
+      <p class="lead">
+        This extension can show you patterns in how you search, using data that
+        never leaves your computer.
       </p>
 
-      
-      <p class="version-line">Version: <span id="version-number">&hellip;</span></p>
+      <h2 class="section-heading">What gets recorded</h2>
+      <ul class="data-list data-list--yes">
+        <li>The text of your Google searches</li>
+        <li>The date and time of each search</li>
+        <li>A category we work out from the search text</li>
+      </ul>
 
-      <p class="privacy-note">
-        
+      <h2 class="section-heading">What never gets recorded</h2>
+      <ul class="data-list data-list--no">
+        <li>Page contents, passwords or anything you type into forms</li>
+        <li>Any website other than Google search</li>
+        <li>Anything sent to a server &mdash; there is no server</li>
+      </ul>
+
+      <button id="enable-button" class="button button--primary" type="button">
+        Enable tracking
+      </button>
+
+      <p class="fine-print">
+        You can pause tracking or delete everything at any time.
       </p>
-    </main>
+    </section>
 
-    
+    <!--
+      SCREEN 2: the 
+    -->
+    <section id="control-screen" class="screen is-hidden">
+      <div class="stat-row">
+        <div class="stat">
+          <span class="stat-value" id="stat-today">&mdash;</span>
+          <span class="stat-label">today</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-week">&mdash;</span>
+          <span class="stat-label">this week</span>
+        </div>
+      </div>
+
+      <p class="fine-print">
+        Numbers stay empty until we start collecting searches in a later phase.
+      </p>
+
+      <button id="pause-button" class="button button--secondary" type="button">
+        Pause tracking
+      </button>
+
+      <button id="dashboard-button" class="button button--secondary" type="button" disabled>
+        View full dashboard
+      </button>
+
+      <hr class="divider" />
+
+      <button id="delete-button" class="button button--danger" type="button">
+        Delete all my data
+      </button>
+
+      <!-- The confirmattion of delte -->
+      <div id="delete-confirm" class="confirm-strip is-hidden">
+        <p class="confirm-question">Delete everything? This cannot be undone.</p>
+        <div class="confirm-actions">
+          <button id="delete-yes-button" class="button button--danger button--small" type="button">
+            Yes, delete
+          </button>
+          <button id="delete-no-button" class="button button--secondary button--small" type="button">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <button id="disable-button" class="link-button" type="button">
+        Turn off tracking completely
+      </button>
+    </section>
+
+    <footer class="app-footer">
+      <span>v<span id="version-number">&hellip;</span></span>
+      <span>All data stored locally</span>
+    </footer>
+
     <script src="popup.js"></script>
   </body>
 </html>
