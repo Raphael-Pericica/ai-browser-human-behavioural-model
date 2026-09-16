@@ -2,8 +2,8 @@
   "manifest_version": 3,
 
   "name": "Search Habits AI",
-  "version": "0.3.0",
-  "description": "Privacy first insights about your own Google search habits. Your data stays on your device.",
+  "version": "0.5.0",
+  "description": "Privacy-first insights about your own Google search habits. Your data stays on your device.",
 
   "icons": {
     "16": "icons/icon16.png",
@@ -23,5 +23,16 @@
 
   "background": {
     "service_worker": "background.js"
-  }
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/search*",
+        "https://www.google.ie/search*"
+      ],
+      "js": ["content/google-search.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }

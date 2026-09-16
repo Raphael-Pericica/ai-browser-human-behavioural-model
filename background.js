@@ -3,18 +3,39 @@ const workerStartedAtTime = new Date().toLocaleTimeString();
 
 console.log("[Search Habits AI] Service worker started at " + workerStartedAtTime);
 
+//label for searches
+const SEARCH_MESSAGE_TYPE = "SEARCH_DETECTED";
 
 
-let installEventsSeenSinceStartUp = 0;
 
+let searchesSeenSinceStartUp = 0;
+
+
+
+
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+//checkk label
+  if (message.type !== SEARCH_MESSAGE_TYPE) {
+    return;
+  }
+
+  searchesSeenSinceStartUp = searchesSeenSinceStartUp + 1;
+
+  console.log("[Search Habits AI] Received search:", message.record.query);
+  console.log("[Search Habits AI] Recorded at:", new Date(message.record.timestamp).toLocaleTimeString());
+  console.log("[Search Habits AI] Searches since this start-up:", searchesSeenSinceStartUp);
+
+ 
+  sendResponse({
+    received: true,
+    searchesSeenSinceStartUp: searchesSeenSinceStartUp
+  });
+});
 
 
 
 chrome.runtime.onInstalled.addListener(function (details) {
-  installEventsSeenSinceStartUp = installEventsSeenSinceStartUp + 1;
-
   console.log("[Search Habits AI] onInstalled fired. Reason: " + details.reason);
-  console.log("[Search Habits AI] Install events since this start-up: " + installEventsSeenSinceStartUp);
 
   if (details.reason === "install") {
     console.log("[Search Habits AI] First install. Tracking is off until the user opts in.");
