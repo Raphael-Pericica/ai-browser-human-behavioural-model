@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+*.code-workspace
+
+# Packaged builds and signing keys - NEVER commit a .pem key
+*.zip
+*.crx
+*.pem
+
+# Node (only if we ever add tooling; we do not need it yet)
+node_modules/
