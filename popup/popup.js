@@ -112,6 +112,18 @@ function refreshStoredCounts() {
     } else {
       document.getElementById("top-category-name").textContent = topCategory;
     }
+
+   //stats
+    const summary = buildStatisticsSummary(searches);
+
+    document.getElementById("week-count").textContent = summary.searchesThisWeek;
+
+    // busiest time of day is null when no searches
+    if (summary.busiestTimeOfDay === null) {
+      document.getElementById("busiest-time").textContent = "—";
+    } else {
+      document.getElementById("busiest-time").textContent = summary.busiestTimeOfDay;
+    }
   });
 }
 

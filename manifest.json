@@ -2,8 +2,8 @@
   "manifest_version": 3,
 
   "name": "Search Habits AI",
-  "version": "0.8.0",
-  "description": "Privacy-first insights about your own Google search habits. Your data stays on your device.",
+  "version": "0.9.0",
+  "description": "Privacy first insights about your own Google search habits. Your data stays on your device.",
 
   "icons": {
     "16": "icons/icon16.png",
