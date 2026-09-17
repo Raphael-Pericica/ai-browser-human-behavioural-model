@@ -2,6 +2,9 @@
 importScripts("shared/categories.js");
 
 
+importScripts("shared/ai-categories.js");
+
+
 const workerStartedAtTime = new Date().toLocaleTimeString();
 console.log("[Search Habits AI] Service worker started at " + workerStartedAtTime);
 
@@ -62,6 +65,70 @@ function saveSearchRecord(searchRecord, whenFinished) {
 }
 
 
+//if search does not match a category eg labelled other model will step in and determine a category best 
+// matched
+async function askModelToFillCategoryGap(savedRecord) {
+  
+  if (savedRecord.category !== CATEGORY_OTHER) {
+    return;
+  }
+
+  const aiCategory = await classifyWithAi(savedRecord.query);
+
+  //took too long
+  if (aiCategory === null) {
+    return;
+  }
+
+  //the model is allowed to say other too, it has not told us 
+  // anything new so there is nothing to write
+  if (aiCategory === CATEGORY_OTHER) {
+    console.log("[Search Habits AI] Model also had no category for:", savedRecord.query);
+    return;
+  }
+
+  console.log(
+    "[Search Habits AI] Model filled a gap: Other ->",
+    aiCategory, "for:", savedRecord.query
+  );
+
+  replaceCategoryForRecord(savedRecord.id, aiCategory);
+}
+
+
+//finds record by id then rewrites the category
+function replaceCategoryForRecord(recordId, newCategory) {
+  chrome.storage.local.get([STORAGE_KEY_SEARCHES], function (stored) {
+    const searches = stored[STORAGE_KEY_SEARCHES];
+
+    if (searches === undefined) {
+      return;
+    }
+
+    let wasFound = false;
+
+    for (let i = 0; i < searches.length; i++) {
+      if (searches[i].id === recordId) {
+        searches[i].category = newCategory;
+        searches[i].categorySource = "ai";
+        wasFound = true;
+        break;
+      }
+    }
+
+    
+    if (wasFound === false) {
+      return;
+    }
+
+    const thingsToSave = {};
+    thingsToSave[STORAGE_KEY_SEARCHES] = searches;
+
+    chrome.storage.local.set(thingsToSave);
+  });
+}
+
+
 //gate listen from scout then pass through
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.type !== SEARCH_MESSAGE_TYPE) {
@@ -86,9 +153,13 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     const category = classifySearchQuery(message.record.query);
 
     const recordToSave = {
+      //gives a long random id avoid collisions
+      id: crypto.randomUUID(),
       query: message.record.query,
       timestamp: message.record.timestamp,
-      category: category
+      category: category,
+      //tracks which method categorised ie ai model or my list
+      categorySource: "keywords"
     };
 
     console.log("[Search Habits AI] Received search:", recordToSave.query);
@@ -102,6 +173,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         category: category,
         totalStored: totalStored
       });
+
+      //save record
+      askModelToFillCategoryGap(recordToSave);
     });
   });
 

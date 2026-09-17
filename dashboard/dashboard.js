@@ -1,15 +1,13 @@
-//text content instead of innerhtml to avoid cross site scripting
 
-
-// must match name in background and popup
+// label match
 const STORAGE_KEY_SEARCHES = "searches";
 const STORAGE_KEY_SETTINGS = "settings";
 
-//limit
+// How many rows of repeated searches to list before stopping. Without a limit,
+// a heavy user's page would be thousands of rows long.
 const MAX_REPEAT_ROWS = 12;
 
 
-//make element give class
 function makeElement(tagName, className, text) {
   const element = document.createElement(tagName);
 
@@ -18,7 +16,7 @@ function makeElement(tagName, className, text) {
   }
 
   if (text !== undefined) {
-    
+    // textContent, not innerHTML. See the note at the top of the file.
     element.textContent = text;
   }
 
@@ -34,7 +32,7 @@ function removeAllChildren(element) {
 }
 
 
-//calculate how long bar is
+
 function percentOfLargest(value, largestValue) {
   if (largestValue <= 0) {
     return 0;
@@ -59,8 +57,6 @@ function findLargestCount(items) {
 
 
 
-//the column chart searches per day
-
 
 function drawPerDayChart(perDay) {
   const chart = document.getElementById("per-day-chart");
@@ -73,7 +69,7 @@ function drawPerDayChart(perDay) {
 
     const column = makeElement("div", "column");
 
-    
+
     column.appendChild(makeElement("div", "column-value", String(day.count)));
 
    
@@ -82,7 +78,7 @@ function drawPerDayChart(perDay) {
 
     fill.style.height = percentOfLargest(day.count, largest) + "%";
 
-    
+
     track.title = day.dayKey + ": " + day.count + " searches";
 
     track.appendChild(fill);
@@ -102,14 +98,12 @@ function drawPerDayChart(perDay) {
 
 
 
-
-//builds one row name, bar, value
 function makeBarRow(name, count, largestCount, valueText) {
   const row = makeElement("div", "bar-row");
 
   const nameElement = makeElement("div", "bar-name", name);
 
-  
+
   nameElement.title = name;
 
   row.appendChild(nameElement);
@@ -129,6 +123,44 @@ function makeBarRow(name, count, largestCount, valueText) {
 }
 
 
+
+//which model was used
+function describeCategorySources(searches) {
+  let byAi = 0;
+  let byKeywords = 0;
+  let unknown = 0;
+
+  for (let i = 0; i < searches.length; i++) {
+    if (searches[i].categorySource === "ai") {
+      byAi = byAi + 1;
+    } else if (searches[i].categorySource === "keywords") {
+      byKeywords = byKeywords + 1;
+    } else {
+     
+      unknown = unknown + 1;
+    }
+  }
+
+  const note = document.getElementById("category-note");
+
+  const parts = [];
+
+  if (byAi > 0) {
+    parts.push(byAi + " by the on-device model");
+  }
+
+  if (byKeywords > 0) {
+    parts.push(byKeywords + " by keyword matching");
+  }
+
+  if (unknown > 0) {
+    parts.push(unknown + " from before this was tracked");
+  }
+
+  note.textContent = parts.join(", ") + ". Categories are approximate either way.";
+}
+
+
 function drawCategoryChart(categories) {
   const chart = document.getElementById("category-chart");
   removeAllChildren(chart);
@@ -138,6 +170,7 @@ function drawCategoryChart(categories) {
   for (let i = 0; i < categories.length; i++) {
     const category = categories[i];
 
+   
     const valueText = category.count + " · " + category.percent + "%";
 
     chart.appendChild(makeBarRow(category.name, category.count, largest, valueText));
@@ -149,7 +182,7 @@ function drawTimeOfDayChart(timeOfDay) {
   const chart = document.getElementById("time-of-day-chart");
   removeAllChildren(chart);
 
-  //fixed order
+
   const orderedNames = ["morning", "afternoon", "evening", "night"];
 
   const asItems = [];
@@ -167,10 +200,6 @@ function drawTimeOfDayChart(timeOfDay) {
 }
 
 
-
-//repeated searches table
-
-
 function drawRepeatsTable(repeatedSearches) {
   const body = document.getElementById("repeats-body");
   const note = document.getElementById("repeats-note");
@@ -183,7 +212,7 @@ function drawRepeatsTable(repeatedSearches) {
     const row = makeElement("tr");
     const cell = makeElement("td", "empty-row", "Nothing repeated yet.");
 
-
+   
     cell.colSpan = 2;
 
     row.appendChild(cell);
@@ -191,10 +220,10 @@ function drawRepeatsTable(repeatedSearches) {
     return;
   }
 
-  
+
   const howManyRows = Math.min(repeatedSearches.length, MAX_REPEAT_ROWS);
 
-  
+
   if (howManyRows < repeatedSearches.length) {
     note.textContent =
       repeatedSearches.length + " searches were typed more than once. Showing the top " +
@@ -209,7 +238,6 @@ function drawRepeatsTable(repeatedSearches) {
 
     const row = makeElement("tr");
 
-
     row.appendChild(makeElement("td", undefined, repeat.query));
     row.appendChild(makeElement("td", "numeric", String(repeat.count)));
 
@@ -217,9 +245,6 @@ function drawRepeatsTable(repeatedSearches) {
   }
 }
 
-
-
-//the rest of the page
 
 
 function fillHeadlineNumbers(summary) {
@@ -233,6 +258,7 @@ function fillHeadlineNumbers(summary) {
 
   document.getElementById("kpi-unique-percent").textContent =
     summary.uniqueQueryPercent + "%";
+
 
   document.getElementById("variety-note").textContent =
     "Your " + summary.totalSearches + " searches spread across " +
@@ -308,11 +334,12 @@ function loadEverythingAndDraw() {
         return;
       }
 
-     //call stats 
+    
       const summary = buildStatisticsSummary(searches);
 
       fillHeadlineNumbers(summary);
       drawPerDayChart(summary.perDayLastWeek);
+      describeCategorySources(searches);
       drawCategoryChart(summary.categories);
       drawTimeOfDayChart(summary.timeOfDay);
       drawRepeatsTable(summary.repeatedSearches);
@@ -323,7 +350,7 @@ function loadEverythingAndDraw() {
 }
 
 
-//page updates itseld
+
 chrome.storage.onChanged.addListener(function (changes, areaName) {
   if (areaName !== "local") {
     return;

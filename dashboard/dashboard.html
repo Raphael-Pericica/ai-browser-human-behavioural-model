@@ -20,11 +20,9 @@
         <span id="status-pill" class="status-pill status-pill--off">Not enabled</span>
       </header>
 
-      <!--
-        only one is visible at a time dash or popup
-      -->
+   
 
-      <!-- shown when tracking has never been switched on -->
+     
       <section id="not-enabled-state" class="notice is-hidden">
         <h2 class="notice-title">Tracking is off</h2>
         <p class="notice-body">
@@ -33,7 +31,7 @@
         </p>
       </section>
 
-      <!-- shown when tracking is on but nothing has been recorded yet -->
+
       <section id="no-data-state" class="notice is-hidden">
         <h2 class="notice-title">Nothing recorded yet</h2>
         <p class="notice-body">
@@ -42,9 +40,9 @@
         </p>
       </section>
 
-      <!-- the dash -->
+     
       <main id="dashboard-state" class="is-hidden">
-      
+       
         <section class="kpi-row">
           <div class="tile">
             <span class="tile-value" id="kpi-today">0</span>
@@ -67,15 +65,14 @@
         <section class="card">
           <h2 class="card-title">Searches per day</h2>
           <p class="card-note">Last 7 days, including days with none.</p>
-      
+        
           <div class="column-chart" id="per-day-chart"></div>
         </section>
 
         <section class="card">
           <h2 class="card-title">Categories</h2>
-          <p class="card-note">
-            Worked out from keywords in the search text. Rough by design.
-          </p>
+     
+          <p class="card-note" id="category-note"></p>
           <div class="bar-list" id="category-chart"></div>
         </section>
 
@@ -106,7 +103,7 @@
         <section class="card">
           <h2 class="card-title">Searched more than once</h2>
           <p class="card-note" id="repeats-note"></p>
-          
+         
           <table class="data-table" id="repeats-table">
             <thead>
               <tr>
@@ -125,7 +122,7 @@
       </footer>
     </div>
 
-  
+
     <script src="../shared/categories.js"></script>
     <script src="../shared/statistics.js"></script>
     <script src="dashboard.js"></script>

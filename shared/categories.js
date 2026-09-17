@@ -173,3 +173,17 @@ function readCategoryFromRecord(record) {
 
   return record.category;
 }
+
+
+
+function allCategoryNames() {
+  const names = [];
+
+  for (let i = 0; i < CATEGORIES.length; i++) {
+    names.push(CATEGORIES[i].name);
+  }
+
+  names.push(CATEGORY_OTHER);
+
+  return names;
+}
