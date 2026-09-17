@@ -12,8 +12,7 @@
       <span id="status-pill" class="status-pill status-pill--off">Not enabled</span>
     </header>
 
-  
-  
+
     <section id="consent-screen" class="screen">
       <p class="lead">
         This extension can show you patterns in how you search, using data that
@@ -43,7 +42,7 @@
       </p>
     </section>
 
-
+   
     <section id="control-screen" class="screen is-hidden">
       <div class="stat-row">
         <div class="stat">
@@ -56,8 +55,9 @@
         </div>
       </div>
 
-      <p class="fine-print">
-        Read straight from local storage on this computer.
+      
+      <p class="top-category">
+        Most searched: <strong id="top-category-name">&mdash;</strong>
       </p>
 
       <button id="pause-button" class="button button--secondary" type="button">
@@ -74,7 +74,6 @@
         Delete all my data
       </button>
 
-  
       <div id="delete-confirm" class="confirm-strip is-hidden">
         <p class="confirm-question">Delete everything? This cannot be undone.</p>
         <div class="confirm-actions">
@@ -97,6 +96,8 @@
       <span>All data stored locally</span>
     </footer>
 
+   
+    <script src="../shared/categories.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

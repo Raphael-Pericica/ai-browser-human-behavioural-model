@@ -1,20 +1,20 @@
-
-//both names must match the ones in background
+//match background labels
 const STORAGE_KEY_SEARCHES = "searches";
 const STORAGE_KEY_SETTINGS = "settings";
 
+
+//start false incase something fails
 
 let trackingIsEnabled = false;
 let trackingIsPaused = false;
 
 
-//loads the settings and saves them then execute them
+//load and save settings
 function loadSettings(whenLoaded) {
   chrome.storage.local.get([STORAGE_KEY_SETTINGS], function (stored) {
     const settings = stored[STORAGE_KEY_SETTINGS];
 
     if (settings === undefined) {
-      // Brand new install. Stay off.
       trackingIsEnabled = false;
       trackingIsPaused = false;
     } else {
@@ -27,7 +27,6 @@ function loadSettings(whenLoaded) {
 }
 
 
-//writes the two variables back into storage
 function saveSettings() {
   const settings = {
     trackingEnabled: trackingIsEnabled,
@@ -41,7 +40,7 @@ function saveSettings() {
 }
 
 
-//reads count and turns to milliseconds
+//count searches
 function countSearchesToday(searches) {
   const midnightThisMorning = new Date();
   midnightThisMorning.setHours(0, 0, 0, 0);
@@ -60,6 +59,41 @@ function countSearchesToday(searches) {
 }
 
 
+//finds most common category
+function findMostSearchedCategory(searches) {
+  if (searches.length === 0) {
+    return null;
+  }
+
+  const countsByCategory = {};
+
+  for (let i = 0; i < searches.length; i++) {
+    const categoryName = readCategoryFromRecord(searches[i]);
+
+    if (countsByCategory[categoryName] === undefined) {
+      countsByCategory[categoryName] = 0;
+    }
+
+    countsByCategory[categoryName] = countsByCategory[categoryName] + 1;
+  }
+
+  let bestName = null;
+  let bestCount = 0;
+
+  //loop though array above
+  const names = Object.keys(countsByCategory);
+
+  for (let i = 0; i < names.length; i++) {
+    if (countsByCategory[names[i]] > bestCount) {
+      bestCount = countsByCategory[names[i]];
+      bestName = names[i];
+    }
+  }
+
+  return bestName;
+}
+
+
 function refreshStoredCounts() {
   chrome.storage.local.get([STORAGE_KEY_SEARCHES], function (stored) {
     let searches = stored[STORAGE_KEY_SEARCHES];
@@ -70,11 +104,19 @@ function refreshStoredCounts() {
 
     document.getElementById("stat-today").textContent = countSearchesToday(searches);
     document.getElementById("stat-total").textContent = searches.length;
+
+    const topCategory = findMostSearchedCategory(searches);
+
+    if (topCategory === null) {
+      document.getElementById("top-category-name").textContent = "nothing yet";
+    } else {
+      document.getElementById("top-category-name").textContent = topCategory;
+    }
   });
 }
 
 
-//display the correct screen
+//display correct screen
 
 function refreshScreen() {
   const consentScreen = document.getElementById("consent-screen");
@@ -145,7 +187,6 @@ function handleDisableClick() {
 
 
 function handlePauseClick() {
-
   trackingIsPaused = !trackingIsPaused;
 
   saveSettings();
@@ -163,7 +204,7 @@ function hideDeleteConfirmation() {
 }
 
 
-//deletes data
+//deletes searches
 function handleDeleteConfirmed() {
   chrome.storage.local.remove([STORAGE_KEY_SEARCHES], function () {
     console.log("[Search Habits AI] All stored searches deleted.");
@@ -172,6 +213,7 @@ function handleDeleteConfirmed() {
     refreshStoredCounts();
   });
 }
+
 
 
 function connectButtons() {
@@ -185,15 +227,17 @@ function connectButtons() {
 }
 
 
+
 //start up
+
+
 function showExtensionVersion() {
   const manifest = chrome.runtime.getManifest();
   document.getElementById("version-number").textContent = manifest.version;
 }
 
 
-//consent screen bug fix
-
+//bug fix
 showExtensionVersion();
 connectButtons();
 
