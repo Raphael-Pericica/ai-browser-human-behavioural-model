@@ -70,7 +70,8 @@
         Pause tracking
       </button>
 
-      <button id="dashboard-button" class="button button--secondary" type="button" disabled>
+      <!-- the disabled attribute came off in phase 9 -->
+      <button id="dashboard-button" class="button button--secondary" type="button">
         View full dashboard
       </button>
 
@@ -104,7 +105,8 @@
 
    
     <script src="../shared/categories.js"></script>
-    
+    <!-- statistics.js calls readCategoryFromRecord from categories.js,
+         so it has to load after it -->
     <script src="../shared/statistics.js"></script>
     <script src="popup.js"></script>
   </body>

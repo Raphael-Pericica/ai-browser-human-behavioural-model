@@ -113,12 +113,12 @@ function refreshStoredCounts() {
       document.getElementById("top-category-name").textContent = topCategory;
     }
 
-   //stats
+   //use stats
     const summary = buildStatisticsSummary(searches);
 
     document.getElementById("week-count").textContent = summary.searchesThisWeek;
 
-    // busiest time of day is null when no searches
+    // busiest time of day is null when there are no searches yet.
     if (summary.busiestTimeOfDay === null) {
       document.getElementById("busiest-time").textContent = "—";
     } else {
@@ -228,8 +228,16 @@ function handleDeleteConfirmed() {
 
 
 
+//opens new tab for dashboard
+function handleDashboardClick() {
+  chrome.tabs.create({ url: chrome.runtime.getURL("dashboard/dashboard.html") });
+  window.close();
+}
+
+
 function connectButtons() {
   document.getElementById("enable-button").addEventListener("click", handleEnableClick);
+  document.getElementById("dashboard-button").addEventListener("click", handleDashboardClick);
   document.getElementById("disable-button").addEventListener("click", handleDisableClick);
   document.getElementById("pause-button").addEventListener("click", handlePauseClick);
 

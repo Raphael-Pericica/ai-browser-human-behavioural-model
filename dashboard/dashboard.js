@@ -1,0 +1,337 @@
+//text content instead of innerhtml to avoid cross site scripting
+
+
+// must match name in background and popup
+const STORAGE_KEY_SEARCHES = "searches";
+const STORAGE_KEY_SETTINGS = "settings";
+
+//limit
+const MAX_REPEAT_ROWS = 12;
+
+
+//make element give class
+function makeElement(tagName, className, text) {
+  const element = document.createElement(tagName);
+
+  if (className !== undefined) {
+    element.className = className;
+  }
+
+  if (text !== undefined) {
+    
+    element.textContent = text;
+  }
+
+  return element;
+}
+
+
+
+function removeAllChildren(element) {
+  while (element.firstChild !== null) {
+    element.removeChild(element.firstChild);
+  }
+}
+
+
+//calculate how long bar is
+function percentOfLargest(value, largestValue) {
+  if (largestValue <= 0) {
+    return 0;
+  }
+
+  return (value / largestValue) * 100;
+}
+
+
+
+function findLargestCount(items) {
+  let largest = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].count > largest) {
+      largest = items[i].count;
+    }
+  }
+
+  return largest;
+}
+
+
+
+//the column chart searches per day
+
+
+function drawPerDayChart(perDay) {
+  const chart = document.getElementById("per-day-chart");
+  removeAllChildren(chart);
+
+  const largest = findLargestCount(perDay);
+
+  for (let i = 0; i < perDay.length; i++) {
+    const day = perDay[i];
+
+    const column = makeElement("div", "column");
+
+    
+    column.appendChild(makeElement("div", "column-value", String(day.count)));
+
+   
+    const track = makeElement("div", "column-track");
+    const fill = makeElement("div", "column-fill");
+
+    fill.style.height = percentOfLargest(day.count, largest) + "%";
+
+    
+    track.title = day.dayKey + ": " + day.count + " searches";
+
+    track.appendChild(fill);
+    column.appendChild(track);
+
+
+    let labelClass = "column-label";
+    if (i === perDay.length - 1) {
+      labelClass = "column-label column-label--today";
+    }
+
+    column.appendChild(makeElement("div", labelClass, day.weekdayLabel));
+
+    chart.appendChild(column);
+  }
+}
+
+
+
+
+//builds one row name, bar, value
+function makeBarRow(name, count, largestCount, valueText) {
+  const row = makeElement("div", "bar-row");
+
+  const nameElement = makeElement("div", "bar-name", name);
+
+  
+  nameElement.title = name;
+
+  row.appendChild(nameElement);
+
+  const track = makeElement("div", "bar-track");
+  const fill = makeElement("div", "bar-fill");
+
+  fill.style.width = percentOfLargest(count, largestCount) + "%";
+
+  track.title = name + ": " + count;
+  track.appendChild(fill);
+  row.appendChild(track);
+
+  row.appendChild(makeElement("div", "bar-value", valueText));
+
+  return row;
+}
+
+
+function drawCategoryChart(categories) {
+  const chart = document.getElementById("category-chart");
+  removeAllChildren(chart);
+
+  const largest = findLargestCount(categories);
+
+  for (let i = 0; i < categories.length; i++) {
+    const category = categories[i];
+
+    const valueText = category.count + " · " + category.percent + "%";
+
+    chart.appendChild(makeBarRow(category.name, category.count, largest, valueText));
+  }
+}
+
+
+function drawTimeOfDayChart(timeOfDay) {
+  const chart = document.getElementById("time-of-day-chart");
+  removeAllChildren(chart);
+
+  //fixed order
+  const orderedNames = ["morning", "afternoon", "evening", "night"];
+
+  const asItems = [];
+  for (let i = 0; i < orderedNames.length; i++) {
+    asItems.push({ name: orderedNames[i], count: timeOfDay[orderedNames[i]] });
+  }
+
+  const largest = findLargestCount(asItems);
+
+  for (let i = 0; i < asItems.length; i++) {
+    chart.appendChild(
+      makeBarRow(asItems[i].name, asItems[i].count, largest, String(asItems[i].count))
+    );
+  }
+}
+
+
+
+//repeated searches table
+
+
+function drawRepeatsTable(repeatedSearches) {
+  const body = document.getElementById("repeats-body");
+  const note = document.getElementById("repeats-note");
+
+  removeAllChildren(body);
+
+  if (repeatedSearches.length === 0) {
+    note.textContent = "Every search so far has been different.";
+
+    const row = makeElement("tr");
+    const cell = makeElement("td", "empty-row", "Nothing repeated yet.");
+
+
+    cell.colSpan = 2;
+
+    row.appendChild(cell);
+    body.appendChild(row);
+    return;
+  }
+
+  
+  const howManyRows = Math.min(repeatedSearches.length, MAX_REPEAT_ROWS);
+
+  
+  if (howManyRows < repeatedSearches.length) {
+    note.textContent =
+      repeatedSearches.length + " searches were typed more than once. Showing the top " +
+      howManyRows + ".";
+  } else {
+    note.textContent =
+      repeatedSearches.length + " searches were typed more than once.";
+  }
+
+  for (let i = 0; i < howManyRows; i++) {
+    const repeat = repeatedSearches[i];
+
+    const row = makeElement("tr");
+
+
+    row.appendChild(makeElement("td", undefined, repeat.query));
+    row.appendChild(makeElement("td", "numeric", String(repeat.count)));
+
+    body.appendChild(row);
+  }
+}
+
+
+
+//the rest of the page
+
+
+function fillHeadlineNumbers(summary) {
+  document.getElementById("kpi-today").textContent = summary.searchesToday;
+  document.getElementById("kpi-week").textContent = summary.searchesThisWeek;
+  document.getElementById("kpi-month").textContent = summary.searchesLast30Days;
+  document.getElementById("kpi-total").textContent = summary.totalSearches;
+
+  document.getElementById("kpi-distinct-categories").textContent =
+    summary.distinctCategories;
+
+  document.getElementById("kpi-unique-percent").textContent =
+    summary.uniqueQueryPercent + "%";
+
+  document.getElementById("variety-note").textContent =
+    "Your " + summary.totalSearches + " searches spread across " +
+    summary.distinctCategories + " categories, with " +
+    summary.uniqueQueries + " different queries.";
+}
+
+
+function showStatusPill(settings) {
+  const pill = document.getElementById("status-pill");
+
+  pill.classList.remove("status-pill--off", "status-pill--on", "status-pill--paused");
+
+  if (settings.trackingEnabled !== true) {
+    pill.textContent = "Not enabled";
+    pill.classList.add("status-pill--off");
+  } else if (settings.trackingPaused === true) {
+    pill.textContent = "Paused";
+    pill.classList.add("status-pill--paused");
+  } else {
+    pill.textContent = "Tracking";
+    pill.classList.add("status-pill--on");
+  }
+}
+
+
+
+function showOnlyState(stateElementId) {
+  const allStateIds = ["not-enabled-state", "no-data-state", "dashboard-state"];
+
+  for (let i = 0; i < allStateIds.length; i++) {
+    const element = document.getElementById(allStateIds[i]);
+
+    if (allStateIds[i] === stateElementId) {
+      element.classList.remove("is-hidden");
+    } else {
+      element.classList.add("is-hidden");
+    }
+  }
+}
+
+
+function showVersion() {
+  document.getElementById("version-number").textContent =
+    chrome.runtime.getManifest().version;
+}
+
+
+
+function loadEverythingAndDraw() {
+  chrome.storage.local.get(
+    [STORAGE_KEY_SEARCHES, STORAGE_KEY_SETTINGS],
+    function (stored) {
+      let searches = stored[STORAGE_KEY_SEARCHES];
+      if (searches === undefined) {
+        searches = [];
+      }
+
+      let settings = stored[STORAGE_KEY_SETTINGS];
+      if (settings === undefined) {
+        settings = { trackingEnabled: false, trackingPaused: false };
+      }
+
+      showStatusPill(settings);
+
+      if (settings.trackingEnabled !== true && searches.length === 0) {
+        showOnlyState("not-enabled-state");
+        return;
+      }
+
+      if (searches.length === 0) {
+        showOnlyState("no-data-state");
+        return;
+      }
+
+     //call stats 
+      const summary = buildStatisticsSummary(searches);
+
+      fillHeadlineNumbers(summary);
+      drawPerDayChart(summary.perDayLastWeek);
+      drawCategoryChart(summary.categories);
+      drawTimeOfDayChart(summary.timeOfDay);
+      drawRepeatsTable(summary.repeatedSearches);
+
+      showOnlyState("dashboard-state");
+    }
+  );
+}
+
+
+//page updates itseld
+chrome.storage.onChanged.addListener(function (changes, areaName) {
+  if (areaName !== "local") {
+    return;
+  }
+
+  loadEverythingAndDraw();
+});
+
+
+showVersion();
+loadEverythingAndDraw();

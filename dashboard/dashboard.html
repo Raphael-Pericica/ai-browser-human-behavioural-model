@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="dashboard.css" />
+    <title>Search Habits AI &mdash; Dashboard</title>
+  </head>
+
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">Search Habits AI</h1>
+          <p class="page-subtitle">
+            Everything below is worked out on this computer, from data stored on
+            this computer.
+          </p>
+        </div>
+        <span id="status-pill" class="status-pill status-pill--off">Not enabled</span>
+      </header>
+
+      <!--
+        only one is visible at a time dash or popup
+      -->
+
+      <!-- shown when tracking has never been switched on -->
+      <section id="not-enabled-state" class="notice is-hidden">
+        <h2 class="notice-title">Tracking is off</h2>
+        <p class="notice-body">
+          Open the extension popup from the toolbar and choose
+          <strong>Enable tracking</strong> to start collecting searches.
+        </p>
+      </section>
+
+      <!-- shown when tracking is on but nothing has been recorded yet -->
+      <section id="no-data-state" class="notice is-hidden">
+        <h2 class="notice-title">Nothing recorded yet</h2>
+        <p class="notice-body">
+          Run a few Google searches and come back. This page will fill in as
+          data arrives.
+        </p>
+      </section>
+
+      <!-- the dash -->
+      <main id="dashboard-state" class="is-hidden">
+      
+        <section class="kpi-row">
+          <div class="tile">
+            <span class="tile-value" id="kpi-today">0</span>
+            <span class="tile-label">today</span>
+          </div>
+          <div class="tile">
+            <span class="tile-value" id="kpi-week">0</span>
+            <span class="tile-label">last 7 days</span>
+          </div>
+          <div class="tile">
+            <span class="tile-value" id="kpi-month">0</span>
+            <span class="tile-label">last 30 days</span>
+          </div>
+          <div class="tile">
+            <span class="tile-value" id="kpi-total">0</span>
+            <span class="tile-label">all time</span>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Searches per day</h2>
+          <p class="card-note">Last 7 days, including days with none.</p>
+      
+          <div class="column-chart" id="per-day-chart"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Categories</h2>
+          <p class="card-note">
+            Worked out from keywords in the search text. Rough by design.
+          </p>
+          <div class="bar-list" id="category-chart"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Time of day</h2>
+          <p class="card-note">
+            Morning 05&ndash;12, afternoon 12&ndash;17, evening 17&ndash;22,
+            night 22&ndash;05.
+          </p>
+          <div class="bar-list" id="time-of-day-chart"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Variety</h2>
+          <div class="kpi-row kpi-row--inline">
+            <div class="tile tile--plain">
+              <span class="tile-value" id="kpi-distinct-categories">0</span>
+              <span class="tile-label">different categories</span>
+            </div>
+            <div class="tile tile--plain">
+              <span class="tile-value" id="kpi-unique-percent">0%</span>
+              <span class="tile-label">of searches were new</span>
+            </div>
+          </div>
+          <p class="card-note" id="variety-note"></p>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">Searched more than once</h2>
+          <p class="card-note" id="repeats-note"></p>
+          
+          <table class="data-table" id="repeats-table">
+            <thead>
+              <tr>
+                <th scope="col">Search</th>
+                <th scope="col" class="numeric">Times</th>
+              </tr>
+            </thead>
+            <tbody id="repeats-body"></tbody>
+          </table>
+        </section>
+      </main>
+
+      <footer class="page-footer">
+        <span>Search Habits AI v<span id="version-number">&hellip;</span></span>
+        <span>No server. No account. Nothing leaves this machine.</span>
+      </footer>
+    </div>
+
+  
+    <script src="../shared/categories.js"></script>
+    <script src="../shared/statistics.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>
