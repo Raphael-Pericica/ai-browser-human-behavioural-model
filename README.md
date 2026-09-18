@@ -1,170 +1,78 @@
 # Search Habits AI
 
-A privacy-focused Chrome extension (Manifest V3) that analyses **your own**
-Google search habits locally, on your machine.
+A chrome extension that tracks my own google searches and shows me what I
+actually spend my time looking up. Everything stays on my machine.
 
-Status: **Phase 6 - privacy controls enforced**
+I'm a Computer and software engineering student. Before this I mostly wrote
+java, so nearly everything here was new to me - javaScript, chrome extension
+APIs, message passing, async code.
 
-## The four parts
+![Dashboard](screenshots/dashboard.png)
 
-| Part | File | What it is |
-|------|------|------------|
-| The registration form | `manifest.json` | Facts Chrome reads first: name, version, icons, permissions |
-| The front counter | `popup/` | What you see when you click the toolbar icon. Exists only while open |
-| The back office | `background.js` | Runs with no page open. Sleeps after ~30s of quiet |
-| The scout | `content/google-search.js` | Injected into Google search pages only. Reads the address bar |
+## What it does
 
-All four share one filing cabinet: `chrome.storage.local`.
+You click the extension and opt in. After that it records the text of your
+google searches and when you made them, sorts them into categories, and a
+dashboard shows the patterns of what you search, what time of day, what you
+keep searching over and over.
 
-## Privacy principles
+Nothing else is recorded.
 
-- Tracking is **off by default** and starts only after an explicit opt-in.
-- Data is stored **locally in the browser**. No backend, no external API.
-- Only **Google search queries and timestamps** are recorded - never page
-  contents, form data, passwords, or general browsing history.
-- The user can **pause** tracking and **delete** all collected data at any time.
-- The user can always see exactly what is stored and what is analysed.
+## How it works
 
-### How the opt-in is enforced
+Four parts:
 
-Every search in the extension passes through one listener in `background.js`,
-and that listener is the only place that decides whether a search is kept:
+ `manifest.json` - config chrome reads first
+  `content/google-search.js` - injected into google search pages only. Reads the
+  query out of the URL, never the page
+ `background.js` - service worker, checks you opted in, categorises, saves
+  `popup/` and `dashboard/` - the UI
 
-```js
-if (settings.trackingEnabled !== true) { ...refuse... }
-if (settings.trackingPaused === true)  { ...refuse... }
-```
+They all share `chrome.storage.local`.
 
-Two deliberate choices:
+The search text is already in the address bar, so I pull it from there instead
+of reading the page. That's why the content script never touches the DOM.
 
-- The check is `!== true`, not `=== false`. A missing or corrupted value
-  refuses rather than allows. Only an explicit `true` gets through.
-- When no settings exist at all - a brand new install - the default is
-  tracking off. A bug that wiped the settings would fail closed, not open.
+## Two ways of categorising
 
-Deleting data does not change the settings, and changing the settings does not
-delete data. Two separate decisions, each made by the user.
+The first is keyword matching I wrote by hand. Each category owns a word list,
+whichever matches most wins.
 
-## Storage
+The second is chromes built in Gemini Nano through the prompt API. It runs on
+your own machine, no API key, no server, nothing sent anywhere. That mattered
+because the whole point of this is that search data stays local. I didn't train
+it, it comes pre-trained. I just give it a prompt and restrict the answer to my
+category names with a JSON schema.
 
-`chrome.storage.local` is used, never `chrome.storage.sync`. Sync would upload
-search queries to Google's servers, which would defeat the entire point.
+The model only runs when the keywords found nothing. If my word lists matched,
+that answer is left alone. My lists know things the model doesn't - in this project for example
+"java" means the language not the island.
 
-| Key | Contents |
-|-----|----------|
-| `searches` | An array of search records, oldest first, capped at 5000 |
-| `settings` | `{ trackingEnabled: boolean, trackingPaused: boolean }` |
 
-A search record:
+## Privacy
 
-```js
-{
-  query: "how to learn javascript",
-  timestamp: 1758024000000
-}
-```
+ Off until you turn it on
+ `chrome.storage.local` only never `sync` sync would upload your searches to
+  googles servers
+ Pause and delete buttons
+ The only permission is `storage` plus access to Google search pages
+ No server exists so there's nothing to send anything to
 
-`timestamp` is milliseconds since 1 January 1970, kept as a number so it sorts
-and compares correctly regardless of locale.
+## Running it
 
-## Permissions and access
+ `chrome://extensions` turn on Developer mode
+ Load unpacked, pick this folder
+ Click the icon and opt in
 
-`"permissions": ["storage"]` - lets the extension write to its own private box.
-Chrome shows the user no warning for this, because it grants no access to
-anybody else's data.
+Reload the extension card after changing files. Reload the google tab too if you
+changed the content script.
 
-Host access is limited to Google search result pages:
 
-```
-https://www.google.com/search*
-https://www.google.ie/search*
-```
 
-Chrome describes that as *"Read and change your data on google.com"*, which is
-broader than what the code does: the scout reads only the query string in the
-address bar and never touches page contents.
+ Data retention setting (auto-delete old searches)
+ Google sometimes changes results without reloading the page, so those searches
+  get missed
+ Keyword lists are small, about 20 words per category
+ Two searches at the same moment could race each other when writing to storage
 
-## Project structure
 
-```
-search_habits/
-  manifest.json              Configuration Chrome reads first
-  background.js              The back office: the opt-in gate, and saving
-  content/
-    google-search.js         The scout, injected into Google search pages
-  popup/
-    popup.html               The front counter
-    popup.css
-    popup.js                 Screens, buttons, settings, counts
-  icons/
-    icon16.png  icon48.png  icon128.png
-  README.md
-  .gitignore
-```
-
-## Messages
-
-```js
-{
-  type: "SEARCH_DETECTED",
-  record: { query: "...", timestamp: 1758024000000 }
-}
-```
-
-The back office replies with one of:
-
-```js
-{ received: true, saved: true,  totalStored: 12 }
-{ received: true, saved: false, reason: "not-enabled" }
-{ received: true, saved: false, reason: "paused" }
-```
-
-Because the reply is asynchronous, the listener ends with `return true` to keep
-the message channel open.
-
-## Where each part logs
-
-| Code | Console |
-|------|---------|
-| `popup/popup.js` | Right-click the popup, then Inspect |
-| `background.js` | `chrome://extensions`, then the "service worker" link |
-| `content/google-search.js` | F12 on the Google search page itself |
-
-## Inspecting stored data
-
-In the service worker console:
-
-```js
-chrome.storage.local.get(["searches", "settings"], (r) => console.log(r));
-```
-
-## Running it locally
-
-1. `chrome://extensions`, turn on **Developer mode**.
-2. **Load unpacked**, select this folder.
-
-After changing any file, click the **reload** arrow on the extension card.
-After changing a content script, **also reload the Google tab**.
-
-## Roadmap
-
-| Phase | Goal | Status |
-|-------|------|--------|
-| 0 | Project setup and a loadable extension | done |
-| 1 | Popup UI: consent screen and control panel | done |
-| 2 | Manifest V3 service worker | done |
-| 3 | Detect Google searches | done |
-| 4 | Content script to service worker messaging | done |
-| 5 | Local storage of searches | done |
-| 6 | Privacy controls: opt-in, pause, delete | done |
-| 7 | Search categorisation | |
-| 8 | Statistics / analysis engine | |
-| 9 | Dashboard | |
-| 10 | Habit feedback | |
-| 11 | Experimental self-reflection profile | |
-| 12 | UI/UX polish | |
-| 13 | Testing, privacy review, docs, packaging | |
-| 14 | Possible Chrome Web Store publication | |
-
-Not yet built: a data retention setting (auto-delete searches older than N
-days). Worth adding before any public release.

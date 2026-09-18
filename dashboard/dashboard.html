@@ -42,7 +42,16 @@
 
      
       <main id="dashboard-state" class="is-hidden">
-       
+
+        
+        <section class="card" id="feedback-card">
+          <h2 class="card-title">This week</h2>
+          <p class="card-note">
+            Descriptions of whats in the data, not conclusions about you.
+          </p>
+          <ul class="observation-list" id="observation-list"></ul>
+        </section>
+
         <section class="kpi-row">
           <div class="tile">
             <span class="tile-value" id="kpi-today">0</span>
@@ -125,6 +134,8 @@
 
     <script src="../shared/categories.js"></script>
     <script src="../shared/statistics.js"></script>
+    <!-- feedback.js uses functions from both files above, so it comes after -->
+    <script src="../shared/feedback.js"></script>
     <script src="dashboard.js"></script>
   </body>
 </html>

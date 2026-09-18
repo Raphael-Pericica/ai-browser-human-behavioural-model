@@ -1,10 +1,9 @@
 
-// label match
+//label match
 const STORAGE_KEY_SEARCHES = "searches";
 const STORAGE_KEY_SETTINGS = "settings";
 
-// How many rows of repeated searches to list before stopping. Without a limit,
-// a heavy user's page would be thousands of rows long.
+//limit
 const MAX_REPEAT_ROWS = 12;
 
 
@@ -16,7 +15,7 @@ function makeElement(tagName, className, text) {
   }
 
   if (text !== undefined) {
-    // textContent, not innerHTML. See the note at the top of the file.
+    //textContent not innerHTML
     element.textContent = text;
   }
 
@@ -122,6 +121,33 @@ function makeBarRow(name, count, largestCount, valueText) {
   return row;
 }
 
+
+
+//display the feedback
+function drawObservations(searches) {
+  const list = document.getElementById("observation-list");
+  removeAllChildren(list);
+
+  const observations = buildFeedbackObservations(searches);
+
+  if (observations.length === 0) {
+    const stillNeeded = searchesNeededForFeedback(searches);
+
+    const item = makeElement(
+      "li",
+      "observation observation--empty",
+      "Not enough searches in the last fortnight yet. About " + stillNeeded +
+      " more and this will start filling in."
+    );
+
+    list.appendChild(item);
+    return;
+  }
+
+  for (let i = 0; i < observations.length; i++) {
+    list.appendChild(makeElement("li", "observation", observations[i]));
+  }
+}
 
 
 //which model was used
@@ -337,6 +363,7 @@ function loadEverythingAndDraw() {
     
       const summary = buildStatisticsSummary(searches);
 
+      drawObservations(searches);
       fillHeadlineNumbers(summary);
       drawPerDayChart(summary.perDayLastWeek);
       describeCategorySources(searches);
