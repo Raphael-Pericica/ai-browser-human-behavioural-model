@@ -109,6 +109,26 @@
           <p class="card-note" id="variety-note"></p>
         </section>
 
+        
+        <section class="card card--experiment" id="style-card">
+          <div class="experiment-flag">Experimental</div>
+
+          <h2 class="card-title">Search style</h2>
+          <p class="card-note">
+            A made up label based on the shape of your last 30 days of searches.
+            It is not a personality test, it is not based on psychology, and it
+            says nothing about you as a person. It changes as your searching
+            changes.
+          </p>
+
+          <p class="style-name" id="style-name">&mdash;</p>
+          <p class="style-blurb" id="style-blurb"></p>
+          <p class="style-close is-hidden" id="style-close"></p>
+
+          <h3 class="evidence-heading">Why</h3>
+          <ul class="evidence-list" id="style-evidence"></ul>
+        </section>
+
         <section class="card">
           <h2 class="card-title">Searched more than once</h2>
           <p class="card-note" id="repeats-note"></p>
@@ -134,8 +154,10 @@
 
     <script src="../shared/categories.js"></script>
     <script src="../shared/statistics.js"></script>
-    <!-- feedback.js uses functions from both files above, so it comes after -->
+   
     <script src="../shared/feedback.js"></script>
+    
+    <script src="../shared/profile.js"></script>
     <script src="dashboard.js"></script>
   </body>
 </html>

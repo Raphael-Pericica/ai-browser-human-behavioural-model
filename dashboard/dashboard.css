@@ -403,3 +403,85 @@ body {
 .observation--empty::before {
   background-color: var(--colour-track);
 }
+
+
+.card--experiment {
+  position: relative;
+  border-style: dashed;
+}
+
+.experiment-flag {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--colour-warn-text);
+  background-color: var(--colour-warn-bg);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.style-name {
+  margin: 4px 0 2px 0;
+  font-size: 24px;
+  font-weight: 650;
+  color: var(--colour-accent);
+}
+
+.style-blurb {
+  margin: 0 0 10px 0;
+  color: var(--colour-text-soft);
+}
+
+.style-close {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: var(--colour-warn-text);
+  background-color: var(--colour-warn-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.evidence-heading {
+  margin: 12px 0 6px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--colour-text-faint);
+}
+
+.evidence-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.evidence {
+  font-size: 13px;
+  color: var(--colour-text-soft);
+  padding-left: 14px;
+  position: relative;
+}
+
+.evidence::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 5px;
+  height: 1px;
+  background-color: var(--colour-text-faint);
+}
+
+.evidence--muted {
+  color: var(--colour-text-faint);
+  font-size: 12px;
+  margin-top: 4px;
+}

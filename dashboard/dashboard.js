@@ -150,6 +150,53 @@ function drawObservations(searches) {
 }
 
 
+//search styles cards
+function drawSearchStyle(searches) {
+  const nameElement = document.getElementById("style-name");
+  const blurbElement = document.getElementById("style-blurb");
+  const closeElement = document.getElementById("style-close");
+  const evidenceList = document.getElementById("style-evidence");
+
+  removeAllChildren(evidenceList);
+  closeElement.classList.add("is-hidden");
+
+  const style = buildSearchStyle(searches);
+
+  if (style === null) {
+    const stillNeeded = searchesNeededForProfile(searches);
+
+    nameElement.textContent = "Not enough yet";
+    blurbElement.textContent =
+      "About " + stillNeeded + " more searches in the last 30 days and a style " +
+      "will be worked out.";
+
+    return;
+  }
+
+  nameElement.textContent = style.name;
+  blurbElement.textContent = style.blurb;
+
+  
+  if (style.isClose) {
+    closeElement.textContent =
+      "This was close - " + style.runnerUp.name + " scored almost the same (" +
+      style.score + " vs " + style.runnerUp.score + "). Read it as somewhere " +
+      "between the two.";
+
+    closeElement.classList.remove("is-hidden");
+  }
+
+  for (let i = 0; i < style.evidence.length; i++) {
+    evidenceList.appendChild(makeElement("li", "evidence", style.evidence[i]));
+  }
+
+  evidenceList.appendChild(
+    makeElement("li", "evidence evidence--muted",
+      "worked out from " + style.searchesConsidered + " searches in the last 30 days")
+  );
+}
+
+
 //which model was used
 function describeCategorySources(searches) {
   let byAi = 0;
@@ -369,6 +416,7 @@ function loadEverythingAndDraw() {
       describeCategorySources(searches);
       drawCategoryChart(summary.categories);
       drawTimeOfDayChart(summary.timeOfDay);
+      drawSearchStyle(searches);
       drawRepeatsTable(summary.repeatedSearches);
 
       showOnlyState("dashboard-state");
