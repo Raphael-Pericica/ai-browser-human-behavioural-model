@@ -7,7 +7,7 @@ I'm a Computer and software engineering student. Before this I mostly wrote
 java, so nearly everything here was new to me - javaScript, chrome extension
 APIs, message passing, async code.
 
-![Dashboard](screenshots/dashboard.png)
+
 
 ## What it does
 
