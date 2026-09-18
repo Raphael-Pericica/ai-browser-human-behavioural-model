@@ -6,6 +6,9 @@ const STORAGE_KEY_SETTINGS = "settings";
 //limit
 const MAX_REPEAT_ROWS = 12;
 
+//phase 12 - how many unmatched searches to list
+const MAX_OTHER_ROWS = 15;
+
 
 function makeElement(tagName, className, text) {
   const element = document.createElement(tagName);
@@ -194,6 +197,93 @@ function drawSearchStyle(searches) {
     makeElement("li", "evidence evidence--muted",
       "worked out from " + style.searchesConsidered + " searches in the last 30 days")
   );
+}
+
+
+//lists searches that dont have a category
+function drawOtherSearches(searches) {
+  const list = document.getElementById("other-list");
+  const note = document.getElementById("other-note");
+
+  removeAllChildren(list);
+
+  const unmatched = [];
+
+  for (let i = 0; i < searches.length; i++) {
+    const category = readCategoryFromRecord(searches[i]);
+
+    if (category === CATEGORY_OTHER || category === CATEGORY_UNKNOWN) {
+      unmatched.push(searches[i]);
+    }
+  }
+
+  if (unmatched.length === 0) {
+    note.textContent = "Everything so far matched a category.";
+    return;
+  }
+
+  const share = Math.round((unmatched.length / searches.length) * 100);
+
+  note.textContent =
+    unmatched.length + " of " + searches.length + " searches (" + share +
+    "%) didn't match. Add words to shared/categories.js to fix the ones that " +
+    "should have matched.";
+
+  //groups repeated searches
+  const countsByKey = {};
+  const firstSpellingByKey = {};
+
+  for (let i = 0; i < unmatched.length; i++) {
+    const original = unmatched[i].query;
+    const key = original.trim().toLowerCase();
+
+    if (countsByKey[key] === undefined) {
+      countsByKey[key] = 0;
+      firstSpellingByKey[key] = original;
+    }
+
+    countsByKey[key] = countsByKey[key] + 1;
+  }
+
+  const keys = Object.keys(countsByKey);
+  const grouped = [];
+
+  for (let i = 0; i < keys.length; i++) {
+    grouped.push({
+      query: firstSpellingByKey[keys[i]],
+      count: countsByKey[keys[i]]
+    });
+  }
+
+  
+  grouped.sort(function (a, b) {
+    return b.count - a.count;
+  });
+
+  const howMany = Math.min(grouped.length, MAX_OTHER_ROWS);
+
+  for (let i = 0; i < howMany; i++) {
+    const item = makeElement("li", "other-item");
+
+    
+    item.appendChild(makeElement("span", "other-query", grouped[i].query));
+
+  
+    if (grouped[i].count > 1) {
+      item.appendChild(
+        makeElement("span", "other-count", "×" + grouped[i].count)
+      );
+    }
+
+    list.appendChild(item);
+  }
+
+  if (howMany < grouped.length) {
+    list.appendChild(
+      makeElement("li", "other-item other-item--muted",
+        "and " + (grouped.length - howMany) + " more")
+    );
+  }
 }
 
 
@@ -416,6 +506,7 @@ function loadEverythingAndDraw() {
       describeCategorySources(searches);
       drawCategoryChart(summary.categories);
       drawTimeOfDayChart(summary.timeOfDay);
+      drawOtherSearches(searches);
       drawSearchStyle(searches);
       drawRepeatsTable(summary.repeatedSearches);
 

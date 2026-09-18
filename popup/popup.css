@@ -261,3 +261,37 @@ body {
   color: #7b8794;
   text-align: center;
 }
+
+
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.setting-label {
+  font-size: 12px;
+  color: #3e4c59;
+}
+
+.setting-select {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 7px;
+  border: 1px solid #cbd2d9;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #1f2933;
+  cursor: pointer;
+}
+
+
+button:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

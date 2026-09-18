@@ -55,6 +55,8 @@ that answer is left alone. My lists know things the model doesn't - in this proj
  `chrome.storage.local` only never `sync` sync would upload your searches to
   googles servers
  Pause and delete buttons
+ Optional auto-delete of searches older than 30, 90 or 365 days. Off by default -
+  deleting your data is your call, not mine
  The only permission is `storage` plus access to Google search pages
  No server exists so there's nothing to send anything to
 
@@ -69,9 +71,9 @@ changed the content script.
 
 
 
- Data retention setting (auto-delete old searches)
  Google sometimes changes results without reloading the page, so those searches
   get missed
+ No way to export your data
  Keyword lists are small, about 20 words per category
  Two searches at the same moment could race each other when writing to storage
 

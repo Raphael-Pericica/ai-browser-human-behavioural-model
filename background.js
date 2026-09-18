@@ -19,6 +19,11 @@ const STORAGE_KEY_SETTINGS = "settings";
 //storage limit
 const MAX_STORED_SEARCHES = 5000;
 
+//data retention
+const DEFAULT_RETENTION_DAYS = 0;
+
+const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
+
 
 //read settings
 
@@ -30,8 +35,14 @@ function readSettings(whenReady) {
     if (settings === undefined) {
       settings = {
         trackingEnabled: false,
-        trackingPaused: false
+        trackingPaused: false,
+        retentionDays: DEFAULT_RETENTION_DAYS
       };
+    }
+
+    
+    if (typeof settings.retentionDays !== "number") {
+      settings.retentionDays = DEFAULT_RETENTION_DAYS;
     }
 
     whenReady(settings);
@@ -65,7 +76,57 @@ function saveSearchRecord(searchRecord, whenFinished) {
 }
 
 
-//if search does not match a category eg labelled other model will step in and determine a category best 
+
+function pruneOldSearches() {
+  readSettings(function (settings) {
+    if (settings.retentionDays <= 0) {
+      return;
+    }
+
+    chrome.storage.local.get([STORAGE_KEY_SEARCHES], function (stored) {
+      const searches = stored[STORAGE_KEY_SEARCHES];
+
+      if (searches === undefined) {
+        return;
+      }
+
+     
+      const midnight = new Date();
+      midnight.setHours(0, 0, 0, 0);
+
+      const cutoff = midnight.getTime() -
+        ((settings.retentionDays - 1) * MILLISECONDS_IN_A_DAY);
+
+      const kept = [];
+
+      for (let i = 0; i < searches.length; i++) {
+        if (searches[i].timestamp >= cutoff) {
+          kept.push(searches[i]);
+        }
+      }
+
+      const howManyRemoved = searches.length - kept.length;
+
+    
+      if (howManyRemoved === 0) {
+        return;
+      }
+
+      const thingsToSave = {};
+      thingsToSave[STORAGE_KEY_SEARCHES] = kept;
+
+      chrome.storage.local.set(thingsToSave, function () {
+        console.log(
+          "[Search Habits AI] Retention: removed " + howManyRemoved +
+          " searches older than " + settings.retentionDays + " days."
+        );
+      });
+    });
+  });
+}
+
+
+//if search does not match a category eg labelled other model will step in and determine a category best
 // matched
 async function askModelToFillCategoryGap(savedRecord) {
   
@@ -176,6 +237,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 
       //save record
       askModelToFillCategoryGap(recordToSave);
+
+      //clear out anything past the retention setting
+      pruneOldSearches();
     });
   });
 
@@ -196,9 +260,15 @@ chrome.runtime.onInstalled.addListener(function (details) {
   if (details.reason === "update") {
     console.log("[Search Habits AI] Updated from version " + details.previousVersion);
   }
+
+  //phase 12
+  pruneOldSearches();
 });
 
 
 chrome.runtime.onStartup.addListener(function () {
   console.log("[Search Habits AI] Chrome started up.");
+
+  //phase 12
+  pruneOldSearches();
 });

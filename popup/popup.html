@@ -9,7 +9,9 @@
   <body>
     <header class="app-header">
       <h1 class="app-title">Search Habits AI</h1>
-      <span id="status-pill" class="status-pill status-pill--off">Not enabled</span>
+      
+      <span id="status-pill" class="status-pill status-pill--off"
+            role="status" aria-live="polite">Not enabled</span>
     </header>
 
 
@@ -76,6 +78,19 @@
       </button>
 
       <hr class="divider" />
+
+      
+      <div class="setting-row">
+        <label class="setting-label" for="retention-select">Keep searches for</label>
+        <select id="retention-select" class="setting-select">
+          <option value="0">Forever</option>
+          <option value="30">30 days</option>
+          <option value="90">90 days</option>
+          <option value="365">1 year</option>
+        </select>
+      </div>
+
+      <p class="fine-print" id="retention-note"></p>
 
       <button id="delete-button" class="button button--danger" type="button">
         Delete all my data

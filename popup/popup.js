@@ -8,6 +8,9 @@ const STORAGE_KEY_SETTINGS = "settings";
 let trackingIsEnabled = false;
 let trackingIsPaused = false;
 
+//0 means keep forever
+let retentionDays = 0;
+
 
 //load and save settings
 function loadSettings(whenLoaded) {
@@ -17,9 +20,17 @@ function loadSettings(whenLoaded) {
     if (settings === undefined) {
       trackingIsEnabled = false;
       trackingIsPaused = false;
+      retentionDays = 0;
     } else {
       trackingIsEnabled = settings.trackingEnabled === true;
       trackingIsPaused = settings.trackingPaused === true;
+
+      
+      if (typeof settings.retentionDays === "number") {
+        retentionDays = settings.retentionDays;
+      } else {
+        retentionDays = 0;
+      }
     }
 
     whenLoaded();
@@ -30,7 +41,8 @@ function loadSettings(whenLoaded) {
 function saveSettings() {
   const settings = {
     trackingEnabled: trackingIsEnabled,
-    trackingPaused: trackingIsPaused
+    trackingPaused: trackingIsPaused,
+    retentionDays: retentionDays
   };
 
   const thingsToSave = {};
@@ -228,6 +240,33 @@ function handleDeleteConfirmed() {
 
 
 
+
+function handleRetentionChange() {
+  const chosen = document.getElementById("retention-select").value;
+
+  retentionDays = Number(chosen);
+
+  saveSettings();
+  refreshRetentionNote();
+}
+
+
+
+function refreshRetentionNote() {
+  const note = document.getElementById("retention-note");
+
+  document.getElementById("retention-select").value = String(retentionDays);
+
+  if (retentionDays === 0) {
+    note.textContent = "Nothing is deleted automatically.";
+  } else {
+    note.textContent =
+      "Searches older than " + retentionDays +
+      " days are deleted automatically, including ones already saved.";
+  }
+}
+
+
 //opens new tab for dashboard
 function handleDashboardClick() {
   chrome.tabs.create({ url: chrome.runtime.getURL("dashboard/dashboard.html") });
@@ -240,6 +279,9 @@ function connectButtons() {
   document.getElementById("dashboard-button").addEventListener("click", handleDashboardClick);
   document.getElementById("disable-button").addEventListener("click", handleDisableClick);
   document.getElementById("pause-button").addEventListener("click", handlePauseClick);
+
+
+  document.getElementById("retention-select").addEventListener("change", handleRetentionChange);
 
   document.getElementById("delete-button").addEventListener("click", showDeleteConfirmation);
   document.getElementById("delete-yes-button").addEventListener("click", handleDeleteConfirmed);
@@ -263,5 +305,6 @@ connectButtons();
 
 loadSettings(function () {
   refreshScreen();
+  refreshRetentionNote();
   refreshStoredCounts();
 });
